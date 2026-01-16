@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout - Restaurant{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Checkout</h1>
+    <div class="checkout-container">
+        <div class="checkout-summary" id="checkoutSummary">
+            <div class="checkout-loading">Loading...</div>
+        </div>
+        <div class="payment-section">
+            <h2>Payment</h2>
+            <div id="qrCodeContainer" style="display: none;">
+                <p>Scan QR Code to Pay</p>
+                <img id="qrCodeImage" src="" alt="QR Code">
+            </div>
+            <button class="btn btn-primary" id="payNowBtn" onclick="proceedToPayment()">Pay Now</button>
+            <div id="orderInfo" style="display: none;">
+                <p>Order ID: <span id="orderId"></span></p>
+                <a href="#" class="btn btn-secondary" id="printBillBtn" target="_blank">Print Bill</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/billing.js') }}"></script>
+<script>
+    let currentTotal = 0;
+    let currentOrderId = null;
+    
+    function loadCheckout() {
+        fetch('/cart')
+            .then(response => response.json())
+            .then(data => {
+                if (data.items.length === 0) {
+                    document.getElementById('checkoutSummary').innerHTML = '<p>Your cart is empty. <a href="/">Go to menu</a></p>';
+                    return;
+                }
+                
+                currentTotal = data.total;
+                let html = '<h2>Order Summary</h2><div class="checkout-items">';
+                data.items.forEach(item => {
+                    html += `
+                        <div class="checkout-item">
+                            <span>${item.name} x ${item.quantity}</span>
+                            <span>₹${item.total}</span>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                html += `<div class="checkout-total"><h3>Total: ₹${data.total}</h3></div>`;
+                document.getElementById('checkoutSummary').innerHTML = html;
+            });
+    }
+    
+    function proceedToPayment() {
+        // Create order first
+        fetch('/create_order', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                currentOrderId = data.order_id;
+                // Generate QR code
+                const qrUrl = `/generate_qr/${data.total}`;
+                document.getElementById('qrCodeImage').src = qrUrl;
+                document.getElementById('qrCodeContainer').style.display = 'block';
+                document.getElementById('payNowBtn').style.display = 'none';
+                
+                // Show order info
+                document.getElementById('orderId').textContent = data.order_id;
+                document.getElementById('billOrderId').textContent = data.order_id;
+                const printBtn = document.getElementById('printBillBtn');
+                printBtn.href = `/bill/${data.order_id}`;
+                document.getElementById('orderInfo').style.display = 'block';
+            }
+        });
+    }
+    
+    loadCheckout();
+</script>
+{% endblock %}

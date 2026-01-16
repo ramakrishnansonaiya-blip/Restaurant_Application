@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Panel - Restaurant{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Menu Management</h1>
+    
+    <div class="admin-section">
+        <h2>Add New Menu Item</h2>
+        <form action="/add" method="POST" class="menu-form" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="name">Item Name:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="price">Price (₹):</label>
+                <input type="number" id="price" name="price" min="0" required>
+            </div>
+            <div class="form-group">
+                <label for="image_file">Upload Image:</label>
+                <input type="file" id="image_file" name="image_file" accept="image/*,.png,.jpg,.jpeg,.gif,.webp,.bmp,.svg,.ico,.tiff,.tif,.jfif,.avif,.heic,.heif">
+                <small>Supported formats: PNG, JPG, JPEG, GIF, WEBP, BMP, SVG, ICO, TIFF, JFIF, AVIF, HEIC, HEIF</small>
+            </div>
+            <div class="form-group">
+                <label for="image">Image URL (alternative):</label>
+                <input type="text" id="image" name="image" placeholder="https://example.com/image.jpg">
+            </div>
+            <button type="submit" class="btn btn-primary">Add Item</button>
+        </form>
+    </div>
+    
+    <div class="admin-section">
+        <h2>Current Menu Items</h2>
+        <div class="menu-list">
+            {% for item in items %}
+            <div class="menu-list-item" id="item-{{ item[0] }}">
+                <div class="menu-list-image">
+                    {% if item[3] %}
+                        {% if item[3].startswith('images/') %}
+                            <img src="{{ url_for('static', filename=item[3]) }}" alt="{{ item[1] }}" onerror="this.src='https://via.placeholder.com/100'">
+                        {% elif item[3].startswith('/static/') %}
+                            <img src="{{ item[3] }}" alt="{{ item[1] }}" onerror="this.src='https://via.placeholder.com/100'">
+                        {% else %}
+                            <img src="{{ item[3] }}" alt="{{ item[1] }}" onerror="this.src='https://via.placeholder.com/100'">
+                        {% endif %}
+                    {% else %}
+                        <img src="https://via.placeholder.com/100" alt="{{ item[1] }}">
+                    {% endif %}
+                </div>
+                <div class="menu-list-details">
+                    <h3>{{ item[1] }}</h3>
+                    <p>₹{{ item[2] }}</p>
+                </div>
+                <div class="menu-list-actions">
+                    <button class="btn btn-secondary" onclick="editItem({{ item[0] }})">Edit</button>
+                    <a href="/delete/{{ item[0] }}" class="btn btn-danger" onclick="return confirm('Are you sure?')">Delete</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <h2>Edit Menu Item</h2>
+            <form id="editForm" onsubmit="saveEdit(event)" enctype="multipart/form-data">
+                <input type="hidden" id="editId" name="id">
+                <div class="form-group">
+                    <label for="editName">Item Name:</label>
+                    <input type="text" id="editName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="editPrice">Price (₹):</label>
+                    <input type="number" id="editPrice" name="price" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="editImageFile">Upload New Image:</label>
+                    <input type="file" id="editImageFile" name="image_file" accept="image/*,.png,.jpg,.jpeg,.gif,.webp,.bmp,.svg,.ico,.tiff,.tif,.jfif,.avif,.heic,.heif">
+                    <small>Leave empty to keep current image. Supported: PNG, JPG, JPEG, GIF, WEBP, BMP, SVG, ICO, TIFF, JFIF, AVIF, HEIC, HEIF</small>
+                </div>
+                <div class="form-group">
+                    <label for="editImage">Image URL (alternative):</label>
+                    <input type="text" id="editImage" name="image" placeholder="https://example.com/image.jpg">
+                </div>
+                <button type="submit" class="btn btn-primary">Update Item</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function editItem(id) {
+        fetch(`/menu/${id}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('editId').value = data.id;
+                document.getElementById('editName').value = data.name;
+                document.getElementById('editPrice').value = data.price;
+                document.getElementById('editImage').value = data.image || '';
+                document.getElementById('editModal').style.display = 'block';
+            });
+    }
+    
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+    }
+    
+    function saveEdit(event) {
+        event.preventDefault();
+        const id = document.getElementById('editId').value;
+        const formData = new FormData();
+        formData.append('name', document.getElementById('editName').value);
+        formData.append('price', document.getElementById('editPrice').value);
+        
+        // Add file if selected
+        const fileInput = document.getElementById('editImageFile');
+        if (fileInput.files.length > 0) {
+            formData.append('image_file', fileInput.files[0]);
+        }
+        
+        // Add URL if provided
+        const imageUrl = document.getElementById('editImage').value;
+        if (imageUrl) {
+            formData.append('image', imageUrl);
+        }
+        
+        fetch(`/update/${id}`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (response.redirected) {
+                window.location.href = response.url;
+            }
+        });
+    }
+    
+    window.onclick = function(event) {
+        const modal = document.getElementById('editModal');
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bill - Order #{{ order[0] }}</title>
+    <style>
+        @media print {
+            body { margin: 0; }
+            .no-print { display: none; }
+        }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .bill-header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .bill-info {
+            margin-bottom: 20px;
+        }
+        .bill-items {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .bill-items th,
+        .bill-items td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .bill-items th {
+            background-color: #f2f2f2;
+        }
+        .bill-total {
+            text-align: right;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        .no-print {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="bill-header">
+        <h1>Restaurant Bill</h1>
+        <p>Order #{{ order[0] }}</p>
+    </div>
+    
+    <div class="bill-info">
+        <p><strong>Date:</strong> {{ order[1] }}</p>
+        <p><strong>Status:</strong> {{ order[3] }}</p>
+    </div>
+    
+    <table class="bill-items">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in order_items %}
+            <tr>
+                <td>{{ item[0] }}</td>
+                <td>{{ item[1] }}</td>
+                <td>₹{{ item[2] }}</td>
+                <td>₹{{ item[3] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div class="bill-total">
+        <p>Total Amount: ₹{{ order[2] }}</p>
+    </div>
+    
+    <div class="no-print">
+        <button onclick="window.print()">Print Bill</button>
+        <a href="/" style="margin-left: 10px;">Back to Menu</a>
+    </div>
+</body>
+</html>

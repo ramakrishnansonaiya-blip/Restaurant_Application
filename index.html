@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Menu - Restaurant{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Our Menu</h1>
+    <div class="menu-grid" id="menuGrid">
+        {% for item in items %}
+        <div class="menu-item">
+            <div class="menu-image">
+                {% if item[3] %}
+                    {% if item[3].startswith('images/') %}
+                        <img src="{{ url_for('static', filename=item[3]) }}" alt="{{ item[1] }}" onerror="this.src='https://via.placeholder.com/300x200?text={{ item[1] }}'">
+                    {% elif item[3].startswith('/static/') %}
+                        <img src="{{ item[3] }}" alt="{{ item[1] }}" onerror="this.src='https://via.placeholder.com/300x200?text={{ item[1] }}'">
+                    {% else %}
+                        <img src="{{ item[3] }}" alt="{{ item[1] }}" onerror="this.src='https://via.placeholder.com/300x200?text={{ item[1] }}'">
+                    {% endif %}
+                {% else %}
+                    <img src="https://via.placeholder.com/300x200?text={{ item[1] }}" alt="{{ item[1] }}">
+                {% endif %}
+            </div>
+            <div class="menu-details">
+                <h3 class="menu-name">{{ item[1] }}</h3>
+                <p class="menu-price">₹{{ item[2] }}</p>
+                <button class="btn-add-cart" onclick="addToCart({{ item[0] }})">Add to Cart</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/cart.js') }}"></script>
+<script>
+    function addToCart(menuId) {
+        fetch('/add_to_cart', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ menu_id: menuId, quantity: 1 })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Item added to cart!');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+</script>
+{% endblock %}

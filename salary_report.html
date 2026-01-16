@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Salary Report - Restaurant{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Monthly Salary Report</h1>
+    <div class="salary-report">
+        <div class="report-card">
+            <h2>Staff Information</h2>
+            <div class="report-item">
+                <span class="report-label">Number of Staff:</span>
+                <span class="report-value">{{ staff }}</span>
+            </div>
+            <div class="report-item">
+                <span class="report-label">Salary per Staff:</span>
+                <span class="report-value">₹{{ salary_per_staff }}</span>
+            </div>
+        </div>
+        <div class="report-card highlight">
+            <h2>Total Monthly Salary</h2>
+            <div class="report-total">
+                <span class="total-amount">₹{{ total }}</span>
+            </div>
+        </div>
+        <div class="report-actions">
+            <button class="btn btn-primary" onclick="window.print()">Print Report</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
